@@ -23,7 +23,7 @@ function voipextension_voipscript_load_script($script_name, $params = NULL) {
   }
   if ($script_name == 'voipextension_gosub') {
     module_load_include('inc', 'voipextension', 'voipextension.script');
-    return voipextension_script_gosub($params['eid']);
+    return voipextension_gosub_script($params['number']);
   }
 } 
 
@@ -49,7 +49,7 @@ function voipextension_voipscript_get_script_names() {
 function voipextension_gosub($extension) {
   // note callback can change &$extension['script_arguments'] used later.
   if (! $script_name = _voipextension_run_callback($extension, 'script_callback')) {
-    $script_name = $extension['script_name'];
+    $script_name = $extension['script'];
   }
 
   if ($script_name != '') {
@@ -286,7 +286,7 @@ function _voipextension_run_callback(&$extension, $callback) {
   if (! empty($extension[$callback])) {
     if(function_exists($extension[$callback])) {
       $callback_function = $extension[$callback];
-      $result = $title_function($extension);
+      $result = $callback_function($extension);
     }
     else {
       trigger_error(sprintf('Missing %s for extension %d', $callback, $extension['eid']), E_USER_WARNING);
