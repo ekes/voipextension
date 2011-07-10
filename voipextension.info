@@ -1,0 +1,5 @@
+; $Id$
+name = VoIP Extension API
+description = Provides VoIP Extensions.
+package = VoIP Drupal
+core = 6.x

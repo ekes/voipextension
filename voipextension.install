@@ -1,0 +1,102 @@
+<?php
+
+/**
+ * Implementation of hook_schema().
+ */
+function voipextension_schema() {
+  $schema['voipextension'] = array(
+    'description' => 'VOIP extensions and their callbacks.',
+    'fields' => array(
+      'eid' => array(
+        'description' => 'Extension number, and primary identifier.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'module' => array(
+        'description' => 'The name of the module that the extension is associated with.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'module_id' => array(
+        'description' => 'ID for this extension defined by, and for use by, the module.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'extension_type' => array(
+        'description' => 'Type of extension as defined by the module.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'title' => array(
+        'description' => 'Title of the extension.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'title_callback' => array(
+        'description' => 'Callback to change title, and set audio title',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'description' => array(
+        'description' => 'Description of the extension.',
+        'type' => 'text',
+        'not null' => TRUE,
+      ),
+      'description_callback' => array(
+        'description' => 'Callback to change the description, and set audio description.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'script' => array(
+        'description' => 'VOIP script name associated with extension.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'script_callback' => array(
+        'description' => 'Callback to change script, and set arguments.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'directory_type' => array(
+        'description' => 'How and if the extension should be in a directory.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0
+      ),
+    ),
+    'indexes' => array(
+      voipextension_module_id => array(array('module', 32), array('module_id', 64)),
+    ),
+/*    'unique keys' => array(
+      // too big: module is 255 in {system}, module_id could be 32?
+      'voipextension_module_id' => array('module', 'module_id'),
+    ),*/
+    'primary key' => array('eid'),
+  );
+
+  return $schema;
+}
+
+function voipextension_install() {
+  drupal_install_schema('voipextension');
+}
+
+function voipextension_uninstall() {
+  drupal_uninstall_schema('voipextension');
+  variable_del('voipextension_insertid');
+}

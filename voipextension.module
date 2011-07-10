@@ -1,0 +1,298 @@
+<?php
+
+/**
+ * @file
+ *   Module file for voip extension api.
+ */
+
+/**
+ * Directory type constants.
+ *
+ * Intended to be potentially extended for alternative, additional types.
+ */
+define(VOIPEXTENSION_UNLISTED, 0x000);
+define(VOIPEXTENSION_LISTED, 0x001);
+
+/**
+ * Implementation of hook_voipscript_load_script().
+ */
+function voipextension_voipscript_load_script($script_name, $params = NULL) {
+  if ($script_name == 'voipextension_basic') {
+    module_load_include('inc', 'voipextension', 'voipextension.script');
+    return voipextension_basic_script();
+  }
+  if ($script_name == 'voipextension_gosub') {
+    module_load_include('inc', 'voipextension', 'voipextension.script');
+    return voipextension_script_gosub($params['eid']);
+  }
+} 
+
+/**
+ * Implementation of hook_voipscript_get_script_names().
+ */
+function voipextension_voipscript_get_script_names() {
+  return array(
+    'voipextension_basic',
+    'voipextension_gosub',
+  );
+}
+
+/****
+ * Script API Functions.
+ *
+ * Return values about extensions intended for use with VoipScript class.
+ **/
+
+/**
+ * @see voipextension_script_gosub().
+ */
+function voipextension_gosub($extension) {
+  // note callback can change &$extension['script_arguments'] used later.
+  if (! $script_name = _voipextension_run_callback($extension, 'script_callback')) {
+    $script_name = $extension['script_name'];
+  }
+
+  if ($script_name != '') {
+    if (empty($extension['script_arguments'])) {
+      $extension['script_arguments'] = array();
+    }
+    return array('script_name' => $script_name, 'script_arguments' => $extension['script_arguments']);
+  }
+    
+  return FALSE;
+}
+
+/**
+ *
+ */
+function voipextension_say_title($extension) {
+  if (! $title_prompt = _voipextension_run_callback($extension, 'title_callback')) {
+    $title_prompt = $extension['title'];
+  }
+
+  return $title_prompt;
+}
+
+/**
+ *
+ */
+function voipextension_say_description($extension) {
+  if (! $description_prompt = _voipextension_run_callback($extension, 'description_callback')) {
+    $description_prompt = $extension['description'];
+  }
+
+  return $description_prompt;
+}
+
+/****
+ * Extension CRUD Functions.
+ *
+ * @todo at the moment (module, module_id) isn't constrained as unique,
+ *   should it be a requirement to handle uniquness of this as well as eid?
+ */
+
+/**
+ * Create new extension.
+ *
+ * @param
+ *   voipextension array.
+ */
+function voipextension_create(&$extension) {
+  voipextension_next_eid($extension);
+  drupal_write_record('voipextension', $extension);
+}
+
+/**
+ * Update an existing extension.
+ *
+ * The eid can change. So the assumption is that this is the same 
+ * (module, module_id). See section todo.
+ *
+ * @param
+ *   voipextension array.
+ */
+function voipextension_update($extension, $eid) {
+  $new = FALSE;
+
+  if ($extension['eid'] != $eid || empty($eid)) {
+    $new = TRUE;
+    voipextension_next_eid($extension);
+  }
+
+  if (! $new) {
+    drupal_write_record('voipextension', $extension, 'eid');
+  }
+  else {
+    drupal_write_record('voipextension', $extension);
+    voipextension_delete($eid);
+  }
+} 
+
+/**
+ * Load an extension by eid.
+ *
+ * @param $eid
+ *   extension eid.
+ * @return
+ *   voipextension array or false on failure.
+ */
+function voipextension_load($eid) {
+  $condition = 'eid = %d';
+  $arguments = array($eid);
+  return _voipextension_load($condition, $arguments);
+}
+
+/**
+ * Load an extension by module id.
+ *
+ * @param $module
+ *   string module name.
+ * @param $module_id
+ *   string module id.
+ * @return
+ *   voipextension array or false on failure.
+ */
+function voipextension_load_bymoduleid($module, $module_id) {
+  $condition = "module = '%s' AND module_id = '%s'";
+  $arguments = array($module, $module_id);
+  return _voipextension_load($condition, $arguments);
+}
+
+/**
+ * Internal function to load an extension for given conditions.
+ *
+ * @param $condition
+ *   string query where condiditon.
+ * @param $arguments
+ *   string query arguments.
+ * @return
+ *   voipextension array or false on failure.
+ */
+function _voipextension_load($condition, $arguments) {
+  $fields = drupal_schema_fields_sql('voipextension');
+  $fields = implode(', ', $fields);
+  $extension = db_fetch_array(db_query('SELECT ' . $fields . ' FROM {voipextension} WHERE ' . $condition, $arguments));
+  if ($extension && $extension['module'] != 'voipextension') {
+    $callback = $extension['module'] . '_voipextension_load';
+    if (function_exists($callback)) {
+      $callback($extension);
+    }
+  }
+  return $extension;
+}
+
+/**
+ * Delete an existing extension.
+ *
+ * @param $eid
+ *   extension eid.
+ */
+function voipextension_delete($eid) {
+  return db_query('DELETE FROM {voipextension} WHERE eid = %d', $eid);
+}
+
+/****
+ * Number allocation functions.
+ **/
+
+/**
+ * Allocate the next extension eid.
+ *
+ * Modules using extensions can suggest a number by including it in
+ * $extension['eid']. Any module can offer, or alter, the number
+ * by implementing the hook_voipextensions_next_eid(). If no number
+ * is suggested voipextension_next_insertid() will be used.
+ *
+ * @param
+ *   extension array
+ */
+function voipextension_next_eid(&$extension) {
+  // it is the responsibility of hooks to make a unique number
+  // for example by checking voipextension_exists($eid),
+  // and work with any other modules that would make sense;
+  foreach(module_implements('voipextension_next_eid') as $name) {
+    $function = $name . '_voipextension_next_eid';
+    $function($extension);
+  }
+  
+  if (empty($extension['eid'])) {
+    $extension['eid'] = voipextension_next_insertid();
+  }
+}
+
+/**
+ * Retrieve the next available new extension eid in numeric order.
+ *
+ * @return
+ *   extension eid.
+ */
+function voipextension_next_insertid() {
+  // this strategy to avoid re-assigning deleted extensions;
+  // yet allow for higher id's already set.
+  $eid = variable_get('voipextension_insertid', 0);
+  do {
+    $eid++;
+  } while (voipextension_exists($eid));
+  variable_set('voipextension_insertid', $eid);
+
+  return $eid;
+}
+
+/**
+ * Check if an extension number is valid.
+ *
+ * @param $number
+ *   Extension number to test.
+ * @param $unique
+ *   Bool true if number should be new and unique (default FALSE).
+ * @return
+ *   Bool true if valid.
+ */
+function voipextension_validate_number($number, $unique = FALSE) {
+  if (preg_match('/[^0-9]/', $number)) {
+    return FALSE;
+  }
+  if ($unique && voipextension_exists($number)) {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
+ * Check if an extension eid is registered. 
+ *
+ * For validating an extension number see voipextension_validate().
+ *
+ * @param $eid
+ *   extension number.
+ * @return
+ *   false if it does not exist, the number if it does.
+ */
+function voipextension_exists($eid) {
+  return db_result(db_query('SELECT eid FROM {voipextension} WHERE eid = %d', $eid));
+}
+
+/****
+ * Internal functions.
+ **/
+
+/**
+ * Internal helper function to run callback.
+ */
+function _voipextension_run_callback(&$extension, $callback) {
+  $result = FALSE;
+
+  if (! empty($extension[$callback])) {
+    if(function_exists($extension[$callback])) {
+      $callback_function = $extension[$callback];
+      $result = $title_function($extension);
+    }
+    else {
+      trigger_error(sprintf('Missing %s for extension %d', $callback, $extension['eid']), E_USER_WARNING);
+    }
+  }
+
+  return $result;
+}
+
