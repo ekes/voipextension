@@ -34,8 +34,8 @@ function voipextension_gosub_script($eid) {
 
   $script = new VoipScript('voipextension_gosub');
   if ($extension = voipextension_load($eid)) {
-    $gosub = voipextension_gosub($extension);
-    $title_prompt = voipextension_say_title($extension);
+    $gosub = voipextension_get_gosub($extension);
+    $title_prompt = voipextension_get_title($extension);
     $script->addSay('Transfering to extension number ' . $eid . ' .');
     $script->addSay($title_prompt);
     $script->addGosub($gosub['script_name'], $gosub['script_arguments']);

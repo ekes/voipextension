@@ -37,6 +37,16 @@ function voipextension_voipscript_get_script_names() {
   );
 }
 
+/**
+ * Implementation of hook_views_api().
+ */
+function voipextension_views_api() {
+  return array(
+    'api' => 2.0,
+    'path' => drupal_get_path('module', 'voipextension') . '/views',
+  );
+}
+
 /****
  * Script API Functions.
  *
@@ -46,7 +56,7 @@ function voipextension_voipscript_get_script_names() {
 /**
  * @see voipextension_script_gosub().
  */
-function voipextension_gosub($extension) {
+function voipextension_get_gosub($extension) {
   // note callback can change &$extension['script_arguments'] used later.
   if (! $script_name = _voipextension_run_callback($extension, 'script_callback')) {
     $script_name = $extension['script'];
@@ -65,7 +75,7 @@ function voipextension_gosub($extension) {
 /**
  *
  */
-function voipextension_say_title($extension) {
+function voipextension_get_title($extension) {
   if (! $title_prompt = _voipextension_run_callback($extension, 'title_callback')) {
     $title_prompt = $extension['title'];
   }
@@ -76,7 +86,7 @@ function voipextension_say_title($extension) {
 /**
  *
  */
-function voipextension_say_description($extension) {
+function voipextension_get_description($extension) {
   if (! $description_prompt = _voipextension_run_callback($extension, 'description_callback')) {
     $description_prompt = $extension['description'];
   }
