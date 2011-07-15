@@ -219,6 +219,23 @@ function voipextension_views_default_views() {
     ),
     'default' => 'eid',
   ));
+  $handler = $view->new_display('page', 'Page', 'page_1');
+  $handler->override_option('path', 'voip/extension');
+  $handler->override_option('menu', array(
+    'type' => 'none',
+    'title' => '',
+    'description' => '',
+    'weight' => 0,
+    'name' => 'navigation',
+  ));
+  $handler->override_option('tab_options', array(
+    'type' => 'none',
+    'title' => '',
+    'description' => '',
+    'weight' => 0,
+    'name' => 'navigation',
+  ));
+
   $views[$view->name] = $view;
 
   return $views;
