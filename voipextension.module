@@ -169,6 +169,27 @@ function voipextension_load_bymoduleid($module, $module_id) {
 }
 
 /**
+ * Return multiple extensions by module.
+ *
+ * Hooks are not called, as this is intended for the module itself to check extensions.
+ *
+ * @param $module
+ *   string module name.
+ * @return
+ *   array of voipextension arrays or false on failure.
+ */
+function voipextension_load_module_extensions($module) {
+  $fields = drupal_schema_fields_sql('voipextension');
+  $fields = implode(', ', $fields);
+  $result = db_query("SELECT " . $fields . " FROM {voipextension} WHERE module = '%s'", $module);
+  $extensions = array();
+  while ($extension = db_fetch_array($result)) {
+    $extensions[$extension['module_id']] = $extension;
+  }
+  return $extensions;
+}
+
+/**
  * Internal function to load an extension for given conditions.
  *
  * @param $condition
