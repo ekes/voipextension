@@ -17,13 +17,13 @@ define(VOIPEXTENSION_LISTED, 0x001);
  * Implementation of hook_voipscript_load_script().
  */
 function voipextension_voipscript_load_script($script_name, $params = NULL) {
-  if ($script_name == 'voipextension_basic') {
+  if ($script_name == 'voipextension_basic_menu') {
     module_load_include('inc', 'voipextension', 'voipextension.script');
-    return voipextension_basic_script();
+    return _voipextension_get_basic_menu_script();
   }
-  if ($script_name == 'voipextension_gosub') {
+  if ($script_name == 'voipextension_play_extension') {
     module_load_include('inc', 'voipextension', 'voipextension.script');
-    return voipextension_gosub_script($params['number']);
+    return _voipextension_get_play_extension_script($params['number']);
   }
 } 
 
@@ -32,8 +32,8 @@ function voipextension_voipscript_load_script($script_name, $params = NULL) {
  */
 function voipextension_voipscript_get_script_names() {
   return array(
-    'voipextension_basic',
-    'voipextension_gosub',
+    'voipextension_basic_menu',
+    'voipextension_play_extension',
   );
 }
 
@@ -54,9 +54,12 @@ function voipextension_views_api() {
  **/
 
 /**
- * @see voipextension_script_gosub().
+ * Return an array with the name and the arguments of the script associated
+ * with the given extension.
+ *
+ * @see _voipextension_get_play_extension_script()
  */
-function voipextension_get_gosub($extension) {
+function voipextension_get_script($extension) {
   // note callback can change &$extension['script_arguments'] used later.
   if (! $script_name = _voipextension_run_callback($extension, 'script_callback')) {
     $script_name = $extension['script'];
@@ -162,7 +165,7 @@ function voipextension_load($eid) {
  * @return
  *   voipextension array or false on failure.
  */
-function voipextension_load_bymoduleid($module, $module_id) {
+function voipextension_load_by_module_id($module, $module_id) {
   $condition = "module = '%s' AND module_id = '%s'";
   $arguments = array($module, $module_id);
   return _voipextension_load($condition, $arguments);
