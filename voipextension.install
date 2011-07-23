@@ -80,7 +80,7 @@ function voipextension_schema() {
       ),
     ),
     'indexes' => array(
-      voipextension_module_id => array(array('module', 32), array('module_id', 64)),
+      'voipextension_module_id' => array(array('module', 32), array('module_id', 64)),
     ),
 /*    'unique keys' => array(
       // too big: module is 255 in {system}, module_id could be 32?

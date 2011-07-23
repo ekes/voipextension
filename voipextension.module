@@ -10,8 +10,8 @@
  *
  * Intended to be potentially extended for alternative, additional types.
  */
-define(VOIPEXTENSION_UNLISTED, 0x000);
-define(VOIPEXTENSION_LISTED, 0x001);
+define('VOIPEXTENSION_UNLISTED', 0x000);
+define('VOIPEXTENSION_LISTED', 0x001);
 
 /**
  * Implementation of hook_voipscript_load_script().
