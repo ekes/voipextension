@@ -3,47 +3,152 @@
 function _voipextension_get_basic_menu_script() {
   $script = new VoipScript('voipextension_basic_menu');
 
+  $prompt = t('Please enter the desired extension number followed by the pound key. Or press * to go back.');
+
   $script->addLabel('request_extension');
-  // @todo variable length addGetInput is broken with tropo at least
-  //       have NULL as length it returns after the first key
-  //       have a larger number and '#' as the end_key and there is no
-  //       value placed in %input_digits
-  // fixed at 3 digits for now 
-  $script->addGetInput(t('Please enter the number of the extension you would like followed by a #. Or press * to hang up.'), 3, '#', 5);
+  $script->addGetInput($prompt, NULL, '#', 3);
 $script->addLog('%input_digits', 'getInput result');
   $script->addGotoIf('no_input_received', "^%input_digits == ''");
-  $script->addGotoIf('hang_up', "^%input_digits == '*'");
-  $script->addGosub('voipextension_play_extension', array('number' => "%input_digits")); 
+  $script->addGotoIf('go_back', "^%input_digits == '*'");
+  $script->addGosub('voipextension_play_extension', array('eid' => "%input_digits")); 
   $script->addGoto('request_extension');
+
   $script->addLabel('no_input_received');
   $script->addSay('No input received. Please try again.');
   $script->addGoto('request_extension');
-  $script->addLabel('hang_up');
-  $script->addSay('Goodbye');
+
+  $script->addLabel('go_back');
   $script->addReturn();
+
   return $script;
 }
 
-function _voipextension_get_play_extension_script($eid) {
-  // remove the terminating # if it is there.
-  if (substr($eid, -1) == '#') {
-    $eid = substr($eid, 0, -1);
-  }
-
+function _voipextension_get_play_extension_script($eid, $options=array()) {
   // @todo load api, when in a separate file.
 
   $script = new VoipScript('voipextension_play_extension');
   if ($extension = voipextension_load($eid)) {
     $gosub = voipextension_get_script($extension);
-    $title_prompt = voipextension_get_title($extension);
-    $script->addSay('Transfering to extension number ' . $eid . ' .');
-    $script->addSay($title_prompt);
-    $script->addGosub($gosub['script_name'], $gosub['script_arguments']);
+    $p_transferring = t('Transferring to extension @number. ',
+                        array('@number' => $eid));
+    $script->addSay($p_transferring);
+    $arguments = array_merge($gosub['script_arguments'], $options);
+    // include the extension in the arguments
+    $arguments['eid'] = $eid;
+    $script->addGosub($gosub['script_name'], $arguments);
   }
   else {
-    $script->addSay('Unknown extension number ' . $eid);
+    $p_unknown = t('Unknown extension @number. ',
+                        array('@number' => $eid));
+    $script->addSay($p_unknown);
   }
   $script->addReturn();
  
   return $script;
 }
+
+/**
+ * Basic script that reads a voipextension directory and executes the script
+ * associated with the selected extension number. This function might be called
+ * directly by other modules to create their own directories.
+ *
+ * @param @module
+ * String module name
+ *
+ * @param @extension_type
+ * String with the type of the extensions to be included in the directory
+ *
+ * @param @options
+ * Array with optinal parameters to change the prompts of the script
+ *
+ * @return
+ * Sets script variable 'selected_extension' with the extension number selected,
+ * or NULL in case of timeout or invalid input. 
+ */
+function voipextension_get_directory_script($module, $extension_type='', $options=array()) {
+
+  $script = new VoipScript('voipextension_directory');
+
+  $rx = voipextension_load_module_extensions($module, $extension_type);
+
+  if(!$rx) {
+    $p_no_extensions = t('This directory is currently empty. ');
+    if($options['p_no_extensions']) {
+      $p_no_extensions = $options['p_no_extensions'];
+    }
+    $script->addSay($p_no_extensions);
+  }
+  else {
+    $p_directory_name = t("Extension's directory. ");
+    if($options['p_directory_name']) {
+      $p_directory_name = $options['p_directory_name'];
+    }
+    $p_instructions = t("At any time, press the desired extension number or press the pound key to go back to the previous menu. ");
+    if($options['p_instructions']) {
+      $p_instructions = $options['p_instructions'];
+    }
+    $p_no_input = t('No input received. Please try again. ');
+    if($options['p_no_input']) {
+      $p_no_input = $options['p_no_input'];
+    }
+    $p_invalid_extension = t('Invalid extension number. Please try again. ');
+    if($options['p_invalid_extension']) {
+      $p_invalid_extension = $options['p_invalid_extension'];
+    }
+
+    // by default, run the script associated with the selected extension
+    $run_scripts = TRUE;
+    if($options['run_scripts']) {
+      $run_scripts = $options['run_scripts'];
+    }
+
+    $prompt = $p_directory_name . $p_instructions;
+
+    foreach($rx as $x) {
+      $number = $x['eid'];
+      $title = voipextension_get_title($x);
+      $x_numbers[] = $number;
+// TODO: sort based on $node->title? add directory_title to voipextension?
+      $prompt .= t('for @title, press @number. ',
+                   array('@title' => $title, '@number' => $number));
+    }
+
+    $script->addSet('__dir_counter', 0);
+    $script->addSet('selected_extension', NULL);
+    $s_x_numbers = serialize($x_numbers);
+
+    $script->addLabel('read_directory');
+    $script->addGetInput($prompt, NULL, '', 3);
+    $script->addGotoIf('no_input', '^is_null(%input_digits)');
+    $script->addGotoIf('go_back', '^%input_digits == "#"');
+    $script->addGotoIf('invalid_extension',
+                      "^!in_array(%input_digits, unserialize('$s_x_numbers'))");
+
+    // handle valid extension number
+    $script->addSet('selected_extension', '%input_digits');
+    if($run_scripts) {
+      $options['eid'] = '%selected_extension';
+      $script->addGosub('voipextension_play_extension', $options);
+    }
+
+    $script->addGoto('go_back');
+
+    $script->addLabel('no_input');
+    $script->addSet('__dir_counter', '^%__dir_counter + 1');
+    $script->addGotoIf('go_back', "^%__dir_counter >= 3");
+    $script->addSay($p_no_input);
+    $script->addGoto('read_directory');
+
+    $script->addLabel('invalid_extension');
+    $script->addSet('__dir_counter', '^%__dir_counter + 1');
+    $script->addGotoIf('go_back', "^%__dir_counter >= 3");
+    $script->addSay($p_invalid_extension);
+    $script->addGoto('read_directory');
+
+    $script->addLabel('go_back');
+    $script->addUnset('__dir_counter');
+  }
+
+  return $script;
+}
+   

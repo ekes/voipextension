@@ -21,10 +21,17 @@ function voipextension_voipscript_load_script($script_name, $params = NULL) {
     module_load_include('inc', 'voipextension', 'voipextension.script');
     return _voipextension_get_basic_menu_script();
   }
+
   if ($script_name == 'voipextension_play_extension') {
     module_load_include('inc', 'voipextension', 'voipextension.script');
-    return _voipextension_get_play_extension_script($params['number']);
+    return _voipextension_get_play_extension_script($params['eid'], $params);
   }
+
+  if ($script_name == 'voipextension_directory') {
+    module_load_include('inc', 'voipextension', 'voipextension.script');
+    return voipextension_get_directory_script($params['module'], $params['extension_type'], $params);
+  }
+
 } 
 
 /**
@@ -34,6 +41,7 @@ function voipextension_voipscript_get_script_names() {
   return array(
     'voipextension_basic_menu',
     'voipextension_play_extension',
+    'voipextension_directory',
   );
 }
 
@@ -184,6 +192,8 @@ function voipextension_load_by_module_id($module, $module_id) {
  *   array of voipextension arrays or false on failure.
  */
 function voipextension_load_module_extensions($module, $extension_type='') {
+//TODO: make sure $extension_type might also include arrays
+
   $fields = drupal_schema_fields_sql('voipextension');
   $fields = implode(', ', $fields);
   if (!$extension_type) {
@@ -194,6 +204,7 @@ function voipextension_load_module_extensions($module, $extension_type='') {
   }
   $extensions = array();
   while ($extension = db_fetch_array($result)) {
+//TODO: the $extensions array should be indexed by eid
     $extensions[$extension['module_id']] = $extension;
   }
   return $extensions;
@@ -320,6 +331,17 @@ function voipextension_exists($eid) {
 
 /**
  * Internal helper function to run callback.
+ *
+ * @param $extension
+ * Array with the extension attributes
+ *
+ * @param $callback
+ * String with the key of $extension that contains the name of the callback
+ * function to be executed. The callback function may change the contents of
+ * $extension.
+ *
+ * @return
+ * The result of the callback function.
  */
 function _voipextension_run_callback(&$extension, $callback) {
   $result = FALSE;
