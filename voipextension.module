@@ -187,24 +187,28 @@ function voipextension_load_by_module_id($module, $module_id) {
  * @param $module
  *   string module name.
  * @param $extension_type
- *   string extension type
+ *   string/array single extension type, or array of extension type strings
  * @return
  *   array of voipextension arrays or false on failure.
  */
 function voipextension_load_module_extensions($module, $extension_type='') {
-//TODO: make sure $extension_type might also include arrays
-
   $fields = drupal_schema_fields_sql('voipextension');
   $fields = implode(', ', $fields);
   if (!$extension_type) {
-    $result = db_query("SELECT " . $fields . " FROM {voipextension} WHERE module = '%s'", $module);
+    $result = db_query("SELECT $fields FROM {voipextension} WHERE module = '%s'", $module);
   }
   else {
-    $result = db_query("SELECT " . $fields . " FROM {voipextension} WHERE module = '%s' AND extension_type = '%s'", $module, $extension_type);
+    if (! is_array($extension_type)) {
+      $extension_type = array($extension_type);
+    }
+    $placeholders = implode(',' , array_fill(0, sizeof($extension_type), "'%s'"));
+    $arguments = array_merge(array($module), $extension_type);
+    $result = db_query("SELECT $fields FROM {voipextension} WHERE module = '%s' AND extension_type IN ($placeholders)", $arguments);
   }
   $extensions = array();
   while ($extension = db_fetch_array($result)) {
 //TODO: the $extensions array should be indexed by eid
+// QUESTION: But the function is for the module. The module will will know their ID not the eid.
     $extensions[$extension['module_id']] = $extension;
   }
   return $extensions;
