@@ -187,7 +187,7 @@ function voipextension_load_by_module_id($module, $module_id) {
  * @param $module
  *   string module name.
  * @param $extension_type
- *   string/array single extension type, or array of extension type strings
+ *   string/array single extension type, or array of extension type strings. Optional.
  * @return
  *   array of voipextension arrays or false on failure.
  */
@@ -253,6 +253,9 @@ function voipextension_delete($eid) {
 
 /**
  * Enable an extension.
+ *
+ * @param $eid
+ *   extension eid.
  */
 function voipextension_enable($eid) {
   return db_query('UPDATE {voipextension} SET enabled = 1 WHERE eid = %d', $eid);
@@ -260,9 +263,34 @@ function voipextension_enable($eid) {
 
 /**
  * Disable an extension.
+ *
+ * @param $eid
+ *   extension eid.
  */
 function voipextension_disable($eid) {
   return db_query('UPDATE {voipextension} SET enabled = 0 WHERE eid = %d', $eid);
+}
+
+/**
+ * Disable all module extensions, or all module extensions of a type.
+ *
+ * @param $module
+ *   string module name.
+ * @param $extension_type
+ *   string/array string extension type, or array of extension type strings. Optional.
+ */
+function voipextension_disable_module_extensions($module, $extension_type = '') {
+  if (! $extension_type) {
+    return db_query("UPDATE {voipextension} SET enabled = 0 WHERE module = '%s'", $module);
+  }
+  else {
+    if (! is_array($extension_type)) {
+      $extension_type = array($extension_type);
+    }
+    $placeholders = implode(',' , array_fill(0, sizeof($extension_type), "'%s'"));
+    $arguments = array_merge(array($module), $extension_type);
+    return db_query("UPDATE {voipextension} SET enabled = 0 WHERE module = '%s' AND extension_type IN ($placeholders)", $arguments);
+  }
 }
 
 /****
