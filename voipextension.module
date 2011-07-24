@@ -247,6 +247,30 @@ function voipextension_delete($eid) {
   return db_query('DELETE FROM {voipextension} WHERE eid = %d', $eid);
 }
 
+/**
+ * Delete extensions by module.
+ *
+ * @param $module
+ *   string module name.
+ * @param $extension_type
+ *   string/array singles extension type, or array of extension type strings. Optional.
+ */
+function voipextension_delete_module_extensions($module, $extension_type='') {
+  if (! $extension_type) {
+    return db_query("DELETE FROM {voipextension} WHERE module = '%s'", $module);
+  }
+  else {
+    if (! is_array($extension_type)) {
+      $extension_type = array($extension_type);
+    }
+    $placeholders = implode(',' , array_fill(0, sizeof($extension_type), "'%s'"));
+    $arguments = array_merge(array($module), $extension_type);
+    return db_query("DELETE FROM {voipextension} WHERE module = '%s' AND extension_type IN ($placeholders)", $arguments);
+  }
+
+}
+
+
 /****
  * Alter extension functions.
  */
