@@ -149,6 +149,23 @@ function voipextension_views_data() {
       'handler' => 'views_handler_sort',
     ),
   );
+  
+  $data['voipextension']['enabled'] = array(
+    'title' => t('Enabled'),
+    'help' => t('If the extension is enabled.'),
+    'field' => array(
+      'handler' => 'views_handler_field_boolean',
+      'click sortable' => TRUE,
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_boolean_operator',
+      'label' => t('Enabled'),
+      'type' => 'yes-no',
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+  );
 
   return $data;
 }
