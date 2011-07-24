@@ -179,6 +179,20 @@ function voipextension_views_default_views() {
       'field' => 'directory_type',
       'relationship' => 'none',
     ),
+    'enabled' => array(
+      'operator' => '=',
+      'value' => '1',
+      'group' => '0',
+      'exposed' => FALSE,
+      'expose' => array(
+        'operator' => FALSE,
+        'label' => '',
+      ),
+      'id' => 'enabled',
+      'table' => 'voipextension',
+      'field' => 'enabled',
+      'relationship' => 'none',
+    ),
   ));
   $handler->override_option('access', array(
     'type' => 'none',
@@ -220,6 +234,39 @@ function voipextension_views_default_views() {
     'default' => 'eid',
   ));
   $handler = $view->new_display('page', 'Page', 'page_1');
+  $handler->override_option('filters', array(
+    'directory_type' => array(
+      'operator' => '=',
+      'value' => '1',
+      'group' => '0',
+      'exposed' => FALSE,
+      'expose' => array(
+        'operator' => FALSE,
+        'label' => '',
+      ),
+      'id' => 'directory_type',
+      'table' => 'voipextension',
+      'field' => 'directory_type',
+      'relationship' => 'none',
+    ),
+    'enabled' => array(
+      'operator' => '=',
+      'value' => '1',
+      'group' => '0',
+      'exposed' => FALSE,
+      'expose' => array(
+        'operator' => FALSE,
+        'label' => '',
+      ),
+      'id' => 'enabled',
+      'table' => 'voipextension',
+      'field' => 'enabled',
+      'override' => array(
+        'button' => 'Use default',
+      ),
+      'relationship' => 'none',
+    ),
+  ));
   $handler->override_option('path', 'voip/extension');
   $handler->override_option('menu', array(
     'type' => 'none',
