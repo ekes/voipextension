@@ -207,8 +207,8 @@ function voipextension_load_module_extensions($module, $extension_type='') {
   }
   $extensions = array();
   while ($extension = db_fetch_array($result)) {
-//TODO: the $extensions array should be indexed by eid
-// QUESTION: But the function is for the module. The module will will know their ID not the eid.
+    //TODO: the $extensions array should be indexed by eid
+    // QUESTION: But the function is for the module. The module will will know their ID not the eid.
     $extensions[$extension['module_id']] = $extension;
   }
   return $extensions;
@@ -248,6 +248,24 @@ function voipextension_delete($eid) {
 }
 
 /****
+ * Alter extension functions.
+ */
+
+/**
+ * Enable an extension.
+ */
+function voipextension_enable($eid) {
+  return db_query('UPDATE {voipextension} SET enabled = 1 WHERE eid = %d', $eid);
+} 
+
+/**
+ * Disable an extension.
+ */
+function voipextension_disable($eid) {
+  return db_query('UPDATE {voipextension} SET enabled = 0 WHERE eid = %d', $eid);
+}
+
+/****
  * Number allocation functions.
  **/
 
@@ -270,7 +288,7 @@ function voipextension_next_eid(&$extension) {
     $function = $name . '_voipextension_next_eid';
     $function($extension);
   }
-  
+
   if (empty($extension['eid'])) {
     $extension['eid'] = voipextension_next_insertid();
   }

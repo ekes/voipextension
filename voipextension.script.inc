@@ -27,7 +27,7 @@ function _voipextension_get_play_extension_script($eid, $options=array()) {
   // @todo load api, when in a separate file.
 
   $script = new VoipScript('voipextension_play_extension');
-  if ($extension = voipextension_load($eid)) {
+  if ($extension = voipextension_load($eid) && $extension['enabled']) {
     $gosub = voipextension_get_script($extension);
     $p_transferring = t('Transferring to extension @number. ',
                         array('@number' => $eid));

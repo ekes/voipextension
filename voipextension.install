@@ -76,16 +76,18 @@ function voipextension_schema() {
         'description' => 'How and if the extension should be in a directory.',
         'type' => 'int',
         'not null' => TRUE,
-        'default' => 0
+        'default' => 0,
+      ),
+      'enabled' => array(
+        'description' => 'Boolean indicating whether the extension is enabled.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 1,
       ),
     ),
     'indexes' => array(
       'voipextension_module_id' => array(array('module', 32), array('module_id', 64)),
     ),
-/*    'unique keys' => array(
-      // too big: module is 255 in {system}, module_id could be 32?
-      'voipextension_module_id' => array('module', 'module_id'),
-    ),*/
     'primary key' => array('eid'),
   );
 
@@ -99,4 +101,15 @@ function voipextension_install() {
 function voipextension_uninstall() {
   drupal_uninstall_schema('voipextension');
   variable_del('voipextension_insertid');
+}
+
+/**
+ * alpha-1 upgrade.
+ *
+ * Adding enabled field.
+ */
+function voipextension_update_6001() {
+  $ret = array();
+  db_add_field($ret, 'voipextension', 'enabled', array('type' => 'int', 'not null' => TRUE, 'default' => 1,));
+  return $ret;
 }
