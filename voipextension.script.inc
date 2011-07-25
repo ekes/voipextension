@@ -104,13 +104,17 @@ function voipextension_get_directory_script($module, $extension_type='', $option
 
     $prompt = $p_directory_name . $p_instructions;
 
+    // sort extensions by their text title
+    function _voipextension_sort_by_title($x1, $x2) {
+        return strnatcmp($x1['title'], $x2['title']); }
+    uasort($rx, '_voipextension_sort_by_title');
+
     foreach($rx as $x) {
       $number = $x['eid'];
-      $title = voipextension_get_title($x);
+      $audio_title = voipextension_get_title($x);
       $x_numbers[] = $number;
-// TODO: sort based on $node->title? add directory_title to voipextension?
       $prompt .= t('for @title, press @number. ',
-                   array('@title' => $title, '@number' => $number));
+                   array('@title' => $audio_title, '@number' => $number));
     }
 
     $script->addSet('__dir_counter', 0);
