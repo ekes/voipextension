@@ -281,7 +281,7 @@ function voipextension_delete_module_extensions($module, $extension_type='') {
  * @param $eid
  *   extension eid.
  */
-function voipextension_enable($eid) {
+function voipextension_enable_extension($eid) {
   return db_query('UPDATE {voipextension} SET enabled = 1 WHERE eid = %d', $eid);
 } 
 
@@ -291,7 +291,7 @@ function voipextension_enable($eid) {
  * @param $eid
  *   extension eid.
  */
-function voipextension_disable($eid) {
+function voipextension_disable_extension($eid) {
   return db_query('UPDATE {voipextension} SET enabled = 0 WHERE eid = %d', $eid);
 }
 
