@@ -81,25 +81,25 @@ function voipextension_get_directory_script($module, $extension_type='', $option
   else {
     $p_directory_name = t("Extension's directory. ");
     if($options['p_directory_name']) {
-      $p_directory_name = $options['p_directory_name'];
+      $p_directory_name = $options['p_directory_name'] . ' ';
     }
     $p_instructions = t("At any time, press the desired extension number or press the pound key to go back to the previous menu. ");
     if($options['p_instructions']) {
-      $p_instructions = $options['p_instructions'];
+      $p_instructions = $options['p_instructions'] . ' ';
     }
     $p_no_input = t('No input received. Please try again. ');
     if($options['p_no_input']) {
-      $p_no_input = $options['p_no_input'];
+      $p_no_input = $options['p_no_input'] . ' ';
     }
     $p_invalid_extension = t('Invalid extension number. Please try again. ');
     if($options['p_invalid_extension']) {
-      $p_invalid_extension = $options['p_invalid_extension'];
+      $p_invalid_extension = $options['p_invalid_extension'] . ' ';
     }
 
     // by default, run the script associated with the selected extension
     $run_scripts = TRUE;
     if($options['run_scripts']) {
-      $run_scripts = $options['run_scripts'];
+      $run_scripts = $options['run_scripts'] . ' ';
     }
 
     $prompt = $p_directory_name . $p_instructions;
