@@ -399,6 +399,32 @@ function voipextension_exists($eid) {
   return db_result(db_query('SELECT eid FROM {voipextension} WHERE eid = %d', $eid));
 }
 
+/**
+ * Implementation of hook_token_list().
+ */
+function voipextension_token_list($type = 'all') {
+    $tokens = array();
+	if ($type == 'node' || $type == 'all') {
+		$tokens['node']['voip-extension'] = t('The VoIP Drupal extension number for this node');
+	}
+    return $tokens;
+}
+
+/**
+ * Implementation of hook_token_values().
+ */
+function voipextension_token_values($type, $object = NULL, $options = array()) {
+	$values = array();
+	switch ($type) {
+	case 'node':
+    	if(property_exists($object,'voipextension_number')){
+    		$values['voip-extension']  = $object->voipextension_number;
+    	}
+		break;
+	}
+	return $values;
+}
+
 /****
  * Internal functions.
  **/
