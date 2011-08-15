@@ -9,6 +9,8 @@
  * Implementation of hook_views_data().
  */
 function voipextension_views_data() {
+  $data = array();
+
   // table information
   $data['voipextension']['table']['group'] = t('VoIP extension');
 
