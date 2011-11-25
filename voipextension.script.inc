@@ -3,7 +3,7 @@
 function _voipextension_get_basic_menu_script() {
   $script = new VoipScript('voipextension_basic_menu');
 
-  $prompt = t('Please enter the desired extension number followed by the pound key. Or press * to go back.');
+  $prompt = variable_get('voipextension_prompt_msg', t('Please enter the desired extension number followed by the pound key. Or press * to go back.'));
 
   $script->addLabel('request_extension');
   $script->addGetInput($prompt, NULL, '#', 3);
@@ -14,7 +14,7 @@ $script->addLog('%input_digits', 'getInput result');
   $script->addGoto('request_extension');
 
   $script->addLabel('no_input_received');
-  $script->addSay('No input received. Please try again.');
+  $script->addSay(variable_get('voipextension_noinput_msg', t('No input received. Please try again.')));
   $script->addGoto('request_extension');
 
   $script->addLabel('go_back');
@@ -29,18 +29,26 @@ function _voipextension_get_play_extension_script($eid, $options=array()) {
   $script = new VoipScript('voipextension_play_extension');
   if (($extension = voipextension_load($eid)) && $extension['enabled']) {
     $gosub = voipextension_get_script($extension);
-    $p_transferring = t('Transferring to extension @number. ',
-                        array('@number' => $eid));
-    $script->addSay($p_transferring);
+    if ($transferring = variable_get('voipextension_transferring_msg', FALSE)) {
+      $transferring = sprintf($transferring, array('@number' => $eid));
+    }
+    else {
+      $transferring = t('Transferring to extension @number. ', array('@number' => $eid));
+    }
+    $script->addSay($transferring);
     $arguments = array_merge($gosub['script_arguments'], $options);
     // include the extension in the arguments
     $arguments['eid'] = $eid;
     $script->addGosub($gosub['script_name'], $arguments);
   }
   else {
-    $p_unknown = t('Unknown extension @number. ',
-                        array('@number' => $eid));
-    $script->addSay($p_unknown);
+    if ($unknown = variable_get('voipextension_unknown_msg', FALSE)) {
+      $unknown = sprintf($unknown, array('@number' => $eid));
+    }
+    else {
+      $unknown = t('Unknown extension @number. ', array('@number' => $eid));
+    }
+    $script->addSay($unknown);
   }
   $script->addReturn();
  
