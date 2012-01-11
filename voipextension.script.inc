@@ -6,7 +6,7 @@ function _voipextension_get_basic_menu_script() {
   $prompt = variable_get('voipextension_prompt_msg', t('Please enter the desired extension number followed by the pound key. Or press * to go back.'));
 
   $script->addLabel('request_extension');
-  $script->addGetInput($prompt, NULL, '#', 3);
+  $script->addGetInput($prompt, 5, '#', 3);
 $script->addLog('%input_digits', 'getInput result');
   $script->addGotoIf('no_input_received', "^%input_digits == ''");
   $script->addGotoIf('go_back', "^%input_digits == '*'");
