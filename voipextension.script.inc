@@ -3,7 +3,7 @@
 function _voipextension_get_basic_menu_script() {
   $script = new VoipScript('voipextension_basic_menu');
 
-  $prompt = variable_get('voipextension_prompt_msg', t('Please enter the desired extension number followed by the pound key. Or press * to go back.'));
+  $prompt = variable_get('voipextension_prompt_msg', t('Please enter the desired extension number followed by the pound key. Or press star to go back.'));
 
   $script->addLabel('request_extension');
   $script->addGetInput($prompt, 5, '#', 3);
