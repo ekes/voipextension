@@ -7,7 +7,6 @@ function _voipextension_get_basic_menu_script() {
 
   $script->addLabel('request_extension');
   $script->addGetInput($prompt, 5, '#', 3);
-$script->addLog('%input_digits', 'getInput result');
   $script->addGotoIf('no_input_received', "^%input_digits == ''");
   $script->addGotoIf('go_back', "^%input_digits == '*'");
   $script->addGosub('voipextension_play_extension', array('eid' => "%input_digits")); 
@@ -27,13 +26,13 @@ function _voipextension_get_play_extension_script($eid, $options=array()) {
   // @todo load api, when in a separate file.
 
   $script = new VoipScript('voipextension_play_extension');
+  // using voipscript %number replacement
+  $script->setVar('number', $eid);
+
   if (($extension = voipextension_load($eid)) && $extension['enabled']) {
     $gosub = voipextension_get_script($extension);
-    if ($transferring = variable_get('voipextension_transferring_msg', FALSE)) {
-      $transferring = sprintf($transferring, array('@number' => $eid));
-    }
-    else {
-      $transferring = t('Transferring to extension @number. ', array('@number' => $eid));
+    if (! $transferring = variable_get('voipextension_transferring_msg', FALSE)) {
+      $transferring = t('Transferring to extension %number. ');
     }
     $script->addSay($transferring);
     $arguments = array_merge($gosub['script_arguments'], $options);
@@ -42,11 +41,8 @@ function _voipextension_get_play_extension_script($eid, $options=array()) {
     $script->addGosub($gosub['script_name'], $arguments);
   }
   else {
-    if ($unknown = variable_get('voipextension_unknown_msg', FALSE)) {
-      $unknown = sprintf($unknown, array('@number' => $eid));
-    }
-    else {
-      $unknown = t('Unknown extension @number. ', array('@number' => $eid));
+    if (! $unknown = variable_get('voipextension_unknown_msg', FALSE)) {
+      $unknown = t('Unknown extension %number. ');
     }
     $script->addSay($unknown);
   }
